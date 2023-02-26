@@ -20,6 +20,8 @@ export default class Demo extends Phaser.Scene {
     this.load.image('tree', 'assets/tree.png');
     this.load.image('door', 'assets/door.png');
     this.load.image('apple', 'assets/apple.png');
+    this.load.image('start', 'assets/start.png');
+
 
   }
 
@@ -107,6 +109,14 @@ export default class Demo extends Phaser.Scene {
           tileSprite.setOrigin(0, 0);
           tileSprite.setDisplaySize(TILESIZE, TILESIZE);
         }
+
+        if (map[i][j] == 2) {
+          // start tile
+          let startSprite = this.add.sprite(j * TILESIZE, OFFSET + i * TILESIZE, 'start');
+          startSprite.setOrigin(0, 0);
+          startSprite.setDisplaySize(TILESIZE, TILESIZE);
+        }
+
         // if 9 draw door
         else if (map[i][j] == 9) {
           let doorSprite = this.add.sprite(j * TILESIZE, OFFSET + i * TILESIZE, 'door');
