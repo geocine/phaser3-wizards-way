@@ -8,6 +8,7 @@ export default class Demo extends Phaser.Scene {
   wizardSprite?: Phaser.GameObjects.Sprite;
   keyPressed: boolean = false;
   keyTimeout?: number = undefined;
+  map: number[][] = [];
 
   constructor() {
     super('GameScene');
@@ -16,6 +17,9 @@ export default class Demo extends Phaser.Scene {
   preload() {
     this.load.image('wizard', 'assets/wizard.png');
     this.load.image('tile', 'assets/tile.png');
+    this.load.image('tree', 'assets/tree.png');
+    this.load.image('door', 'assets/door.png');
+    this.load.image('apple', 'assets/apple.png');
 
   }
 
@@ -23,11 +27,22 @@ export default class Demo extends Phaser.Scene {
     this.moveWizard();
   }
 
+  isMoveable(x: number, y: number) {
+    let i = x / TILESIZE;
+    let j = (y - OFFSET) / TILESIZE;
+    console.log(this.map[j][i]);
+    if ([9, 1, 2].includes(this.map[j][i])) {
+      return true;
+    }
+    return false;
+  }
+
   moveWizard(): void {
     // check if left or right arrow is pressed
     if (this.input.keyboard.addKey("LEFT").isDown && !this.keyPressed) {
       // move the wizard left
-      if (this.wizardSprite!.x - TILESIZE >= 0) {
+      let nextMove = this.wizardSprite!.x - TILESIZE;
+      if (nextMove >= 0 && this.isMoveable(nextMove, this.wizardSprite!.y)) {
         this.wizardSprite!.x -= TILESIZE;
       }
 
@@ -35,21 +50,25 @@ export default class Demo extends Phaser.Scene {
     }
     else if (this.input.keyboard.addKey("RIGHT").isDown && !this.keyPressed) {
       // move the wizard right
-      if (this.wizardSprite!.x + TILESIZE < this.game.config.width) {
+      console.log('right');
+      let nextMove = this.wizardSprite!.x + TILESIZE;
+      if (nextMove < this.game.config.width && this.isMoveable(nextMove, this.wizardSprite!.y)) {
         this.wizardSprite!.x += TILESIZE;
       }
       this.keyPressed = true;
     }
     else if (this.input.keyboard.addKey("UP").isDown && !this.keyPressed) {
       // move the wizard up
-      if (this.wizardSprite!.y - TILESIZE >= 0) {
+      let nextMove = this.wizardSprite!.y - TILESIZE;
+      if (nextMove >= 0 && this.isMoveable(this.wizardSprite!.x, nextMove)) {
         this.wizardSprite!.y -= TILESIZE;
       }
       this.keyPressed = true;
     }
     else if (this.input.keyboard.addKey("DOWN").isDown && !this.keyPressed) {
       // move the wizard down
-      if (this.wizardSprite!.y + TILESIZE < ((this.game.config.height as number) - TILESIZE)) {
+      let nextMove = this.wizardSprite!.y + TILESIZE;
+      if (nextMove < ((this.game.config.height as number) - TILESIZE) && this.isMoveable(this.wizardSprite!.x, nextMove)) {
         this.wizardSprite!.y += TILESIZE;
       }
       this.keyPressed = true;
@@ -74,20 +93,33 @@ export default class Demo extends Phaser.Scene {
     }
   }
 
-  drawMap(array: number[][]) {
-    let arrayLength = array[0].length;
-    let arrayHeight = array.length;
+  drawMap(map: number[][]) {
+    let arrayLength = map[0].length;
+    let arrayHeight = map.length;
     for (let i = 0; i < arrayHeight; i++) {
       for (let j = 0; j < arrayLength; j++) {
 
-        if (array[i][j] == 0) continue;
+        if (map[i][j] == 0) continue;
 
-        if (array[i][j] == 1) {
+        if (map[i][j] == 1) {
           // tiles
           let tileSprite = this.add.sprite(j * TILESIZE, OFFSET + i * TILESIZE, 'tile');
           tileSprite.setOrigin(0, 0);
           tileSprite.setDisplaySize(TILESIZE, TILESIZE);
         }
+        // if 9 draw door
+        else if (map[i][j] == 9) {
+          let doorSprite = this.add.sprite(j * TILESIZE, OFFSET + i * TILESIZE, 'door');
+          doorSprite.setOrigin(0, 0);
+          doorSprite.setDisplaySize(TILESIZE, TILESIZE);
+        }
+        // 3 for tree
+        else if (map[i][j] == 3) {
+          let treeSprite = this.add.sprite(j * TILESIZE, OFFSET + i * TILESIZE, 'tree');
+          treeSprite.setOrigin(0, 0);
+          treeSprite.setDisplaySize(TILESIZE, TILESIZE);
+        }
+
       }
     }
 
@@ -100,18 +132,20 @@ export default class Demo extends Phaser.Scene {
     // 0 - Unwalkable path
     // 1 - Tiles
     // 2 - Wizard, add some start stone or color?
+    // 3 - for tree
     // 9 - End door portal?
-    let map = [
+    this.map = [
       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0],
-      [2, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1],
-      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
-      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
-      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+      [0, 0, 3, 3, 3, 3, 1, 3, 3, 3, 3, 0, 0, 0, 0],
+      [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 0, 0, 0],
+      [2, 1, 3, 3, 3, 3, 1, 3, 3, 3, 1, 3, 3, 3, 0],
+      [0, 0, 0, 0, 0, 0, 3, 0, 0, 3, 1, 3, 1, 1, 1],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 1, 3, 3, 1, 1],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 1, 3, 3, 1, 9],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 1, 1, 1, 1, 3],
     ];
-    this.drawMap(map);
+    console.log(this.map[2][1]);
+    this.drawMap(this.map);
 
     this.wizardSprite = this.add.sprite(0, OFFSET, 'wizard');
     this.wizardSprite.flipX = true;
@@ -119,9 +153,9 @@ export default class Demo extends Phaser.Scene {
     this.wizardSprite.setDisplaySize(TILESIZE, TILESIZE);
 
     // position wizard
-    for (let i = 0; i < map.length; i++) {
-      for (let j = 0; j < map[i].length; j++) {
-        if (map[i][j] == 2) {
+    for (let i = 0; i < this.map.length; i++) {
+      for (let j = 0; j < this.map[i].length; j++) {
+        if (this.map[i][j] == 2) {
           this.wizardSprite!.x = (j * TILESIZE);
           this.wizardSprite!.y = OFFSET + (i * TILESIZE);
           break;
