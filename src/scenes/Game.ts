@@ -7,6 +7,7 @@ export default class Demo extends Phaser.Scene {
 
   wizardSprite?: Phaser.GameObjects.Sprite;
   keyPressed: boolean = false;
+  keyTimeout?: number = undefined;
 
   constructor() {
     super('GameScene');
@@ -29,6 +30,7 @@ export default class Demo extends Phaser.Scene {
       if (this.wizardSprite!.x - TILESIZE >= 0) {
         this.wizardSprite!.x -= TILESIZE;
       }
+
       this.keyPressed = true;
     }
     else if (this.input.keyboard.addKey("RIGHT").isDown && !this.keyPressed) {
@@ -47,8 +49,6 @@ export default class Demo extends Phaser.Scene {
     }
     else if (this.input.keyboard.addKey("DOWN").isDown && !this.keyPressed) {
       // move the wizard down
-      console.log("A", this.wizardSprite!.y + TILESIZE)
-      console.log("B", this.game.config.height)
       if (this.wizardSprite!.y + TILESIZE < ((this.game.config.height as number) - TILESIZE)) {
         this.wizardSprite!.y += TILESIZE;
       }
@@ -62,17 +62,23 @@ export default class Demo extends Phaser.Scene {
       this.input.keyboard.addKey("DOWN").isUp && this.keyPressed
     ) {
       this.keyPressed = false;
+      clearTimeout(this.keyTimeout);
+      this.keyTimeout = undefined;
+    }
+
+    if (!this.keyTimeout && this.keyPressed) {
+      this.keyTimeout = setTimeout(() => {
+        this.keyPressed = false;
+        this.keyTimeout = undefined;
+      }, 250);
     }
   }
 
   drawMap(array: number[][]) {
-    let windowWidth = this.game.config.width;
-    let windowHeight = this.game.config.height;
     let arrayLength = array[0].length;
     let arrayHeight = array.length;
-    const tileSize = 128;
-    for (let i = 0; i < array.length; i++) {
-      for (let j = 0; j < array[0].length; j++) {
+    for (let i = 0; i < arrayHeight; i++) {
+      for (let j = 0; j < arrayLength; j++) {
 
         if (array[i][j] == 0) continue;
 
@@ -124,19 +130,14 @@ export default class Demo extends Phaser.Scene {
     }
 
 
+    this.drawDebug(false);
+
+  }
+
+  drawDebug(enable = true) {
+    if (!enable) return;
     // Create a graphics object to draw a rectangular box around the wizard sprite
-    let graphics = this.make.graphics();
-
-    // set the line style
-    graphics.lineStyle(2, 0x00ff00);
-
-    // draw a box around the wizard sprite
-    // graphics.strokeRect(
-    //   0,
-    //   28,
-    //   TILESIZE,
-    //   TILESIZE
-    // );
+    let graphics = this.make.graphics({ x: 0, y: 0, add: true });
 
     // set the line style
     graphics.lineStyle(2, 0x00ff00);
@@ -153,11 +154,6 @@ export default class Demo extends Phaser.Scene {
         );
       }
     }
-
-    // add the graphics to the scene
-    // this.add.existing(graphics);
-
-
 
   }
 }
